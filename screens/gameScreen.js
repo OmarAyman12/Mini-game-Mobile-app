@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
 import PrimaryButton from "../components/primaryButton";
-
+import AntDesign from "@expo/vector-icons/AntDesign";
 function generateRandomBetween(min, max, exclude) {
   let rndNum;
   do {
@@ -12,7 +12,7 @@ function generateRandomBetween(min, max, exclude) {
 
 function GameScreen({ pickedNumber, onGameOver }) {
   const [guessedNumber, setGuessedNumber] = useState();
-
+  const [guessRounds, setGuessRounds] = useState([]);
 
   const minBoundary = useRef(1);
   const maxBoundary = useRef(100);
@@ -28,7 +28,9 @@ function GameScreen({ pickedNumber, onGameOver }) {
 
   useEffect(() => {
     if (guessedNumber === pickedNumber) {
-      onGameOver();
+      
+      onGameOver(guessRounds.length);
+
     }
   }, [guessedNumber, pickedNumber, onGameOver]);
 
@@ -55,6 +57,7 @@ function GameScreen({ pickedNumber, onGameOver }) {
       guessedNumber
     );
     setGuessedNumber(newGuess);
+    setGuessRounds((prevGuessRounds) => [newGuess, ...prevGuessRounds]);
   }
 
   return (
@@ -72,15 +75,24 @@ function GameScreen({ pickedNumber, onGameOver }) {
         <View style={styles.btnContainer}>
           <View style={styles.button}>
             <PrimaryButton onPress={nextGuessHandler.bind(this, "lower")}>
-              -
+              <AntDesign name="minus" size={24} color="white" />
             </PrimaryButton>
           </View>
           <View style={styles.button}>
             <PrimaryButton onPress={nextGuessHandler.bind(this, "higher")}>
-              +
+              <AntDesign name="plus" size={24} color="white" />
             </PrimaryButton>
           </View>
         </View>
+      </View>
+      <View>
+        <FlatList
+          data={guessRounds}
+          renderItem={(itemData) => 
+            <Text>{itemData.item}</Text>
+          }
+          keyExtractor={(item) => item}
+        />
       </View>
     </View>
   );
