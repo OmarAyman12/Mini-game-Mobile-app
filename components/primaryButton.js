@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   primButton: {
-    padding: "5",
+    padding: 5,
     borderWidth: 1,
     marginHorizontal: 5,
     marginVertical: 1,

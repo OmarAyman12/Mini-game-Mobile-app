@@ -64,8 +64,8 @@ export default StartScreen;
 
 const styles = StyleSheet.create({
   startScreen: {
-    marginTop: "100",
-    marginHorizontal: "30",
+    marginTop: 100,
+    marginHorizontal: 30,
   },
   title: {
     borderWidth: 1,
@@ -77,13 +77,13 @@ const styles = StyleSheet.create({
   },
   textInput: {
     borderBottomWidth: 1,
-    width: "10%",
+    width: "30%",
 
     alignItems: "center",
   },
 
   inputContainer: {
-    padding: "15",
+    padding: 15,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#4e0329",
