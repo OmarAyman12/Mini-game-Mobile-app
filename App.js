@@ -1,69 +1,83 @@
+import { useState } from 'react';
+import { StyleSheet, ImageBackground, SafeAreaView } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useFonts } from 'expo-font';
+import AppLoading from 'expo-app-loading';
 
-import { ImageBackground, SafeAreaView, StyleSheet, Text, View } from "react-native";
-import StartScreen from "./screens/startScreen";
-import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
-import GameScreen from "./screens/gameScreen";
-import GameOverScreen from "./screens/gameOverScreen";
+import StartGameScreen from './screens/StartGameScreen';
+import GameScreen from './screens/GameScreen';
+import GameOverScreen from './screens/GameOverScreen';
+import Colors from './constants/colors';
+
 export default function App() {
   const [userNumber, setUserNumber] = useState();
-  const [gameIsOver,setGameIsOver]= useState(true);
-  const [guessRounds,setGuessRounds]=useState(0);
-  function startGameHandler(pickedNumber) {
+  const [gameIsOver, setGameIsOver] = useState(true);
+  const [guessRounds, setGuessRounds] = useState(0);
+
+  const [fontsLoaded] = useFonts({
+    'open-sans': require('./assets/fonts/OpenSans-Regular.ttf'),
+    'open-sans-bold': require('./assets/fonts/OpenSans-Bold.ttf'),
+  });
+
+  if (!fontsLoaded) {
+    return <AppLoading />;
+  }
+
+  function pickedNumberHandler(pickedNumber) {
     setUserNumber(pickedNumber);
     setGameIsOver(false);
   }
-   function gameOverHandler(numberOfRounds) {
-     setGameIsOver(true);
-     setGuessRounds(numberOfRounds);
-   }
-    function startNewGameHandler() {
-      setUserNumber(null);
-      setGameIsOver(true);
-      
-    }
- 
-  let screen = <StartScreen onPickNumber={startGameHandler} />;
 
- if (userNumber && !gameIsOver) {
-   screen = (
-     <GameScreen pickedNumber={userNumber} onGameOver={gameOverHandler} />
-   );
- }
-
-  if(gameIsOver && userNumber){
-    screen = <GameOverScreen onStartNewGame={startNewGameHandler} pickedNumber={userNumber} numOfGuesses={guessRounds}/>;
-
+  function gameOverHandler(numberOfRounds) {
+    setGameIsOver(true);
+    setGuessRounds(numberOfRounds);
   }
- 
 
+  function startNewGameHandler() {
+    setUserNumber(null);
+    setGuessRounds(0);
+  }
 
- 
+  let screen = <StartGameScreen onPickNumber={pickedNumberHandler} />;
+
+  if (userNumber) {
+    screen = (
+      <GameScreen userNumber={userNumber} onGameOver={gameOverHandler} />
+    );
+  }
+
+  if (gameIsOver && userNumber) {
+    screen = (
+      <GameOverScreen
+        userNumber={userNumber}
+        roundsNumber={guessRounds}
+        onStartNewGame={startNewGameHandler}
+      />
+    );
+  }
 
   return (
-    <LinearGradient style={styles.rootScreen} colors={["#4e0329", "#ddb52f"]}>
+    <LinearGradient
+      colors={[Colors.primary700, Colors.accent500]}
+      style={styles.rootScreen}
+    >
       <ImageBackground
-        source={require("./assets/images/background.png")}
+        source={require('./assets/images/background.png')}
         resizeMode="cover"
         style={styles.rootScreen}
-        imageStyle={styles.backGroundImage}
+        imageStyle={styles.backgroundImage}
       >
-        <SafeAreaView style={styles.rootScreen}> {screen}</SafeAreaView>
+        <SafeAreaView style={styles.rootScreen}>{screen}</SafeAreaView>
       </ImageBackground>
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
   rootScreen: {
     flex: 1,
   },
-  backGroundImage: {
-    opacity: 0.3,
+  backgroundImage: {
+    opacity: 0.15,
   },
 });

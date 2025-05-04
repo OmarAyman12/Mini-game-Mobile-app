@@ -1,96 +1,103 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
-import PrimaryButton from "../components/primaryButton";
-import AntDesign from "@expo/vector-icons/AntDesign";
+import { useState, useEffect } from 'react';
+import { View, StyleSheet, Alert, Text, FlatList } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
+import NumberContainer from '../components/game/NumberContainer';
+import Card from '../components/ui/Card';
+import InstructionText from '../components/ui/InstructionText';
+import PrimaryButton from '../components/ui/PrimaryButton';
+import Title from '../components/ui/Title';
+import GuessLogItem from '../components/game/GuessLogItem';
+
 function generateRandomBetween(min, max, exclude) {
-  let rndNum;
-  do {
-    rndNum = Math.floor(Math.random() * (max - min)) + min;
-  } while (rndNum === exclude);
-  return rndNum;
+  const rndNum = Math.floor(Math.random() * (max - min)) + min;
+
+  if (rndNum === exclude) {
+    return generateRandomBetween(min, max, exclude);
+  } else {
+    return rndNum;
+  }
 }
 
-function GameScreen({ pickedNumber, onGameOver }) {
-  const [guessedNumber, setGuessedNumber] = useState();
-  const [guessRounds, setGuessRounds] = useState([]);
+let minBoundary = 1;
+let maxBoundary = 100;
 
-  const minBoundary = useRef(1);
-  const maxBoundary = useRef(100);
+function GameScreen({ userNumber, onGameOver }) {
+  const initialGuess = generateRandomBetween(1, 100, userNumber);
+  const [currentGuess, setCurrentGuess] = useState(initialGuess);
+  const [guessRounds, setGuessRounds] = useState([initialGuess]);
 
   useEffect(() => {
-    const initialGuess = generateRandomBetween(
-      minBoundary.current,
-      maxBoundary.current,
-      pickedNumber
-    );
-    setGuessedNumber(initialGuess);
+    if (currentGuess === userNumber) {
+      onGameOver(guessRounds.length);
+    }
+  }, [currentGuess, userNumber, onGameOver]);
+
+  useEffect(() => {
+    minBoundary = 1;
+    maxBoundary = 100;
   }, []);
 
-  useEffect(() => {
-    if (guessedNumber === pickedNumber) {
-      
-      onGameOver(guessRounds.length);
-
-    }
-  }, [guessedNumber, pickedNumber, onGameOver]);
-
   function nextGuessHandler(direction) {
+    // direction => 'lower', 'greater'
     if (
-      (direction === "lower" && guessedNumber < pickedNumber) ||
-      (direction === "higher" && guessedNumber > pickedNumber)
+      (direction === 'lower' && currentGuess < userNumber) ||
+      (direction === 'greater' && currentGuess > userNumber)
     ) {
-      Alert.alert("Don't lie!!", "You know that's incorrect.", [
-        { text: "Sorry!", style: "cancel" },
+      Alert.alert("Don't lie!", 'You know that this is wrong...', [
+        { text: 'Sorry!', style: 'cancel' },
       ]);
       return;
     }
 
-    if (direction === "lower") {
-      maxBoundary.current = guessedNumber;
+    if (direction === 'lower') {
+      maxBoundary = currentGuess;
     } else {
-      minBoundary.current = guessedNumber + 1;
+      minBoundary = currentGuess + 1;
     }
 
-    const newGuess = generateRandomBetween(
-      minBoundary.current,
-      maxBoundary.current,
-      guessedNumber
+    const newRndNumber = generateRandomBetween(
+      minBoundary,
+      maxBoundary,
+      currentGuess
     );
-    setGuessedNumber(newGuess);
-    setGuessRounds((prevGuessRounds) => [newGuess, ...prevGuessRounds]);
+    setCurrentGuess(newRndNumber);
+    setGuessRounds((prevGuessRounds) => [newRndNumber, ...prevGuessRounds]);
   }
 
+  const guessRoundsListLength = guessRounds.length;
+
   return (
-    <View style={styles.gameScreen}>
-      <View style={styles.title}>
-        <Text style={styles.titleText}>Opponent's Guess</Text>
-      </View>
-      <View style={styles.inputNum}>
-        <Text style={styles.titleText}>{guessedNumber}</Text>
-      </View>
-      <View style={styles.HlContainer}>
-        <View>
-          <Text style={styles.hlText}>Higher or Lower?</Text>
-        </View>
-        <View style={styles.btnContainer}>
-          <View style={styles.button}>
-            <PrimaryButton onPress={nextGuessHandler.bind(this, "lower")}>
-              <AntDesign name="minus" size={24} color="white" />
+    <View style={styles.screen}>
+      <Title>Opponent's Guess</Title>
+      <NumberContainer>{currentGuess}</NumberContainer>
+      <Card>
+        <InstructionText style={styles.instructionText}>
+          Higher or lower?
+        </InstructionText>
+        <View style={styles.buttonsContainer}>
+          <View style={styles.buttonContainer}>
+            <PrimaryButton onPress={nextGuessHandler.bind(this, 'lower')}>
+              <Ionicons name="md-remove" size={24} color="white" />
             </PrimaryButton>
           </View>
-          <View style={styles.button}>
-            <PrimaryButton onPress={nextGuessHandler.bind(this, "higher")}>
-              <AntDesign name="plus" size={24} color="white" />
+          <View style={styles.buttonContainer}>
+            <PrimaryButton onPress={nextGuessHandler.bind(this, 'greater')}>
+              <Ionicons name="md-add" size={24} color="white" />
             </PrimaryButton>
           </View>
         </View>
-      </View>
-      <View>
+      </Card>
+      <View style={styles.listContainer}>
+        {/* {guessRounds.map(guessRound => <Text key={guessRound}>{guessRound}</Text>)} */}
         <FlatList
           data={guessRounds}
-          renderItem={(itemData) => 
-            <Text>{itemData.item}</Text>
-          }
+          renderItem={(itemData) => (
+            <GuessLogItem
+              roundNumber={guessRoundsListLength - itemData.index}
+              guess={itemData.item}
+            />
+          )}
           keyExtractor={(item) => item}
         />
       </View>
@@ -101,49 +108,21 @@ function GameScreen({ pickedNumber, onGameOver }) {
 export default GameScreen;
 
 const styles = StyleSheet.create({
-  gameScreen: {
-    flexDirection: "column",
-    marginTop: 150,
-    marginHorizontal: 10,
-    alignItems: "center",
+  screen: {
+    flex: 1,
+    padding: 24,
+  },
+  instructionText: {
+    marginBottom: 12,
+  },
+  buttonsContainer: {
+    flexDirection: 'row',
+  },
+  buttonContainer: {
     flex: 1,
   },
-  title: {
-    borderWidth: 1,
-    padding: 20,
-    marginBottom: 10,
-  },
-  titleText: {
-    color: "white",
-    fontSize: 20,
-  },
-  inputNum: {
-    borderWidth: 1,
-    padding: 20,
-    marginBottom: 40,
-    width: "80%",
-    alignItems: "center",
-  },
-  HlContainer: {
-    flexDirection: "column",
-    backgroundColor: "#4e0329",
-    borderRadius: 6,
-    alignItems: "center",
-    padding: 20,
-    width: "80%",
-  },
-  button: {
+  listContainer: {
     flex: 1,
-  },
-  btnContainer: {
-    flexDirection: "row",
-  },
-  hlText: {
-    color: "yellow",
-    fontSize: 20,
-    margin: 5,
-  },
-  hlBtn: {
-    fontSize: 10,
+    padding: 16,
   },
 });
